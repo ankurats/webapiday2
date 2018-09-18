@@ -1,0 +1,195 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>CacheCow.Server</name>
+    </assembly>
+    <members>
+        <member name="T:CacheCow.Server.DefaultCacheabilityValidator">
+            <summary>
+            Default implementation according to typical use cases
+            </summary>
+        </member>
+        <member name="T:CacheCow.Server.ICacheabilityValidator">
+            <summary>
+            Decides whether response to an HTTP request can be cached
+            </summary>
+        </member>
+        <member name="M:CacheCow.Server.ICacheabilityValidator.IsCacheable(System.Net.Http.HttpRequestMessage)">
+            <summary>
+            
+            </summary>
+            <param name="request">request</param>
+            <returns>Whether response for this request is Cachebale</returns>
+        </member>
+        <member name="M:CacheCow.Server.ICacheabilityValidator.IsCacheable(System.Net.Http.HttpResponseMessage)">
+            <summary>
+            
+            </summary>
+            <param name="response">request</param>
+            <returns>Whether response for a request is Cachebale</returns>
+        </member>
+        <member name="T:CacheCow.Server.ICacheDirectiveProvider">
+            <summary>
+            Main interface for providing Cache headers for a resource. 
+            Use generic interface if you can.
+            </summary>
+        </member>
+        <member name="T:CacheCow.Server.ICacheDirectiveProvider`1">
+            <summary>
+            Main interface for providing Cache headers for a resource.
+            </summary>
+        </member>
+        <member name="T:CacheCow.Server.DefaultTimedETagExtractor">
+            <summary>
+            Default impl where it tries to cast as ICacheResource and if successful, calls the method
+            </summary>
+        </member>
+        <member name="T:CacheCow.Server.ICacheResource">
+            <summary>
+            To be implemented by Models/ViewModels that can take part in HTTP Cache/Concurrency 
+            </summary>
+        </member>
+        <member name="M:CacheCow.Server.ICacheResource.GetTimedETag">
+            <summary>
+            Calculates/Returns a TimedETag which has either LastModified or ETag
+            </summary>
+            <returns>TimedETag</returns>
+        </member>
+        <member name="T:CacheCow.Server.ITimedETagExtractor">
+            <summary>
+            Non-generic interface. Meant for internal use - please use the generic interface.
+            </summary>
+        </member>
+        <member name="T:CacheCow.Server.ITimedETagExtractor`1">
+            <summary>
+            Generic version.
+            This could have been implemented with an empty Interface (no generic Extract method) and then 
+            generic Extract as an Extension method. But frankly do not make much difference on implementors.
+            </summary>
+            <typeparam name="TViewModel"></typeparam>
+        </member>
+        <member name="T:CacheCow.Server.TimedEntityTagHeaderValue">
+            <summary>
+            A construct representing two options of Cache Validation: ETag and LastModified
+            </summary>
+        </member>
+        <member name="P:CacheCow.Server.TimedEntityTagHeaderValue.LastModified">
+            <summary>
+            Either this or ETag is null. I could have used Scala's Either but pattern matching is new in c#
+            </summary>
+        </member>
+        <member name="M:CacheCow.Server.TimedEntityTagHeaderValue.#ctor(System.String,System.Boolean)">
+            <summary>
+            .ctor
+            </summary>
+            <param name="tag">Opaque string representing the version of the resource</param>
+            <param name="isWeak">Whether it is weak</param>
+        </member>
+        <member name="M:CacheCow.Server.TimedEntityTagHeaderValue.#ctor(System.Net.Http.Headers.EntityTagHeaderValue)">
+            <summary>
+            .ctor
+            </summary>
+            <param name="entityTagHeaderValue">ETag</param>
+        </member>
+        <member name="M:CacheCow.Server.TimedEntityTagHeaderValue.#ctor(System.DateTimeOffset)">
+            <summary>
+            .ctor so the Cache validation is done using LastModified
+            Beware! Use this option if you do not care about milliseconds. Sadly, HTTP time does not have millisecond accuracy.
+            </summary>
+            <param name="lastModified">Last modified of the resource</param>
+        </member>
+        <member name="P:CacheCow.Server.TimedEntityTagHeaderValue.ETag">
+            <summary>
+            Either this or LastModified is null. I could have used Scala's Either but pattern matching is new in c#
+            </summary>
+        </member>
+        <member name="T:CacheCow.Server.IHasher">
+            <summary>
+            Can produce hashes for byte arrays
+            </summary>
+        </member>
+        <member name="M:CacheCow.Server.IHasher.ComputeHash(System.Byte[])">
+            <summary>
+            Computes hash
+            </summary>
+            <param name="bytes">buffer (most likley serialised representation of an object)</param>
+            <returns>hash in base64 encoding</returns>
+        </member>
+        <member name="T:CacheCow.Server.Sha1Hasher">
+            <summary>
+            Sha1 impl
+            </summary>
+        </member>
+        <member name="P:CacheCow.Server.Headers.CacheCowHeader.ShortCircuited">
+            <summary>
+            Whether validation resulted in short-circuiting and the call to depper layers and the controller was bypassed
+            </summary>
+        </member>
+        <member name="P:CacheCow.Server.Headers.CacheCowHeader.ValidationApplied">
+            <summary>
+            Whether validation requested and applied to the request regardless of the result
+            </summary>
+        </member>
+        <member name="P:CacheCow.Server.Headers.CacheCowHeader.ValidationMatched">
+            <summary>
+            Whether the condition requested met
+            For GET it means resulted in 304 and for PUT resulted in 412
+            </summary>
+        </member>
+        <member name="P:CacheCow.Server.Headers.CacheCowHeader.QueryMadeAndSuccessful">
+            <summary>
+            Whether a Query was made and returned non-null
+            </summary>
+        </member>
+        <member name="M:CacheCow.Server.Headers.CacheCowHeaderExtensions.GetCacheCowHeader(System.Net.Http.HttpResponseMessage)">
+            <summary>
+            Extracts CacheCowHeader (server) if one exists
+            </summary>
+            <param name="response"></param>
+            <returns></returns>
+        </member>
+        <member name="T:CacheCow.Server.ITimedETagQueryProvider">
+            <summary>
+            Provides TETHV by querying a store to get the most recent value
+            It is advisable to use the generic interface instead of this one otherwise impl of this interface becomes catch-all for all viewmodel types.
+            </summary>
+        </member>
+        <member name="M:CacheCow.Server.ITimedETagQueryProvider.QueryAsync(System.Web.Http.Controllers.HttpActionContext)">
+            <summary>
+            
+            </summary>
+            <param name="context"></param>
+            <returns></returns>
+            
+        </member>
+        <member name="T:CacheCow.Server.ITimedETagQueryProvider`1">
+            <summary>
+            Provides TETHV by querying a store to get the most recent value
+            This is the cornerstore construct for Cache Validation and conditional GET or PUT. By implementing this interface for your resource, you reduce load on your backend systems.
+            </summary>
+            <typeparam name="T">This type is mainly used for ease of dependency injection</typeparam>
+        </member>
+        <member name="T:CacheCow.Server.NullQueryProvider">
+            <summary>
+            Essentially returns null and does not implement querying. It is the polyfill and default.
+            </summary>
+        </member>
+        <member name="T:CacheCow.Server.ISerialiser">
+            <summary>
+            Serialises an object to a byte array
+            </summary>
+        </member>
+        <member name="M:CacheCow.Server.ISerialiser.Serialise(System.Object)">
+            <summary>
+            Serialises an object to a byte array
+            </summary>
+            <param name="o">object</param>
+            <returns>buffer</returns>
+        </member>
+        <member name="T:CacheCow.Server.JsonSerialiser">
+            <summary>
+            Json impl
+            </summary>
+        </member>
+    </members>
+</doc>
